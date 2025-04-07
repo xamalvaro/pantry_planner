@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:pantry_pal/theme_controller.dart';
+import 'package:pantry_pal/services/firebase_service.dart';
+import 'package:pantry_pal/auth/login_page.dart';
 
 class SettingsPage extends StatelessWidget {
   @override
@@ -118,7 +120,7 @@ class SettingsPage extends StatelessWidget {
 
           SizedBox(height: 16),
 
-          // App Info Section
+          // Logout Section
           Card(
             elevation: 2,
             child: Padding(
@@ -127,7 +129,7 @@ class SettingsPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'About',
+                    'Account',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -136,18 +138,19 @@ class SettingsPage extends StatelessWidget {
                     ),
                   ),
                   SizedBox(height: 16),
-                  Text(
-                    'PantryPal',
-                    style: TextStyle(
-                      fontFamily: themeController.currentFont,
-                      color: isDarkMode ? Colors.white : Colors.black87,
+                  ElevatedButton(
+                    onPressed: () => _showLogoutConfirmation(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red.shade400,
+                      foregroundColor: Colors.white,
+                      minimumSize: Size(double.infinity, 50),
                     ),
-                  ),
-                  Text(
-                    'Version 1.0.0',
-                    style: TextStyle(
-                      fontFamily: themeController.currentFont,
-                      color: isDarkMode ? Colors.white : Colors.black87,
+                    child: Text(
+                      'Logout',
+                      style: TextStyle(
+                        fontFamily: themeController.currentFont,
+                        fontSize: 16,
+                      ),
                     ),
                   ),
                 ],
@@ -156,6 +159,53 @@ class SettingsPage extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  // Logout confirmation dialog
+  void _showLogoutConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Logout'),
+          content: Text('Are you sure you want to log out?'),
+          actions: [
+            TextButton(
+              child: Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red.shade400,
+              ),
+              child: Text('Logout'),
+              onPressed: () async {
+                try {
+                  // Perform logout
+                  await firebaseService.signOut();
+
+                  // Navigate to login page, removing all previous routes
+                  Navigator.of(context).pushAndRemoveUntil(
+                    MaterialPageRoute(builder: (context) => LoginPage()),
+                        (Route<dynamic> route) => false,
+                  );
+                } catch (e) {
+                  // Show error if logout fails
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Logout failed: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 }

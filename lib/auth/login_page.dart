@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:pantry_pal/theme_controller.dart';
 import 'package:pantry_pal/services/user_service.dart';
+import 'package:pantry_pal/app/home_page.dart';
 import 'package:pantry_pal/auth/register_page.dart';
 import 'package:pantry_pal/auth/reset_password_page.dart';
 
@@ -45,18 +46,18 @@ class _LoginPageState extends State<LoginPage> {
         _passwordController.text,
       );
 
-      if (user == null) {
+      if (user != null) {
+        // Navigate to home page, removing all previous routes
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => MyHomePage()),
+              (Route<dynamic> route) => false,
+        );
+      } else {
         // This shouldn't happen if an exception wasn't thrown
         setState(() {
           _errorMessage = 'Failed to sign in. Please try again.';
           _isLoading = false;
         });
-        return;
-      }
-
-      // On success, pop back to previous screen (auth wrapper will handle redirect)
-      if (mounted) {
-        Navigator.of(context).pop();
       }
     } catch (e) {
       // Format the error message

@@ -17,46 +17,34 @@ class AuthWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // If Firebase is not yet initialized, show the app with local storage
+    // If Firebase is not yet initialized, show the splash screen
     if (!isInitialized) {
       return AdaptiveSplashScreen(showProgress: true);
     }
 
-    try {
-      // Try to get auth state, but don't fail if Firebase is not available
-      return StreamBuilder<User?>(
-        stream: firebaseService.isInitialized
-            ? firebaseService.authStateChanges
-            : Stream.value(null), // Provide a fallback stream
-        builder: (context, snapshot) {
-          // If we're still waiting for auth to initialize
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return AdaptiveSplashScreen(showProgress: true);
-          }
+    return StreamBuilder<User?>(
+      stream: firebaseService.authStateChanges,
+      builder: (context, snapshot) {
+        // Still loading
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return AdaptiveSplashScreen(showProgress: true);
+        }
 
-          // If we have a user, show the home page
-          if (snapshot.hasData && snapshot.data != null) {
-            // Get user data after authentication
-            userService.getCurrentUser();
+        // Debug print to understand authentication state
+        print('Auth Snapshot: ${snapshot.data}');
+        print('Is Logged In: ${snapshot.hasData}');
 
-            return MyHomePage();
-          }
-
-          // If Firebase failed to initialize or no user is logged in,
-          // continue to home page with local storage
-          if (!firebaseService.isInitialized || snapshot.data == null) {
-            return MyHomePage();
-          }
-
-          // Otherwise, show the login page
+        // Explicitly check if user is authenticated
+        if (snapshot.hasData && snapshot.data != null) {
+          // Fetch current user data
+          userService.getCurrentUser();
+          return MyHomePage();
+        } else {
+          // No user logged in, show login page
           return LoginPage();
-        },
-      );
-    } catch (e) {
-      print('Error in AuthWrapper: $e');
-      // Fallback to show home page with local storage on any error
-      return MyHomePage();
-    }
+        }
+      },
+    );
   }
 }
 

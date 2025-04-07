@@ -112,6 +112,12 @@ class FirebaseService {
   Future<void> resetPassword(String email) async {
     await auth.sendPasswordResetEmail(email: email);
   }
+
+  Future<bool> checkCurrentAuthState() async {
+    final currentUser = auth.currentUser;
+    print('Explicit Auth Check - User: $currentUser');
+    return currentUser != null;
+  }
 }
 
 // Global instance for easy access

@@ -14,14 +14,13 @@ void main() async {
     }
   };
 
-  // Do minimal initialization
+  // Ensure Flutter binding is initialized
   WidgetsFlutterBinding.ensureInitialized();
 
-  // First, show the app with a splash screen
+  // First, run the app with initialization flag
   runApp(MyApp(isInitialized: false));
 
-  // After app is visible, initialize all services
-  // After app is visible, initialize all services with a timeout
+  // After app is visible, initialize services
   WidgetsBinding.instance.addPostFrameCallback((_) {
     // Start initialization
     AppInitializer.initializeApp();
