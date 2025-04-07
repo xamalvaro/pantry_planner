@@ -6,6 +6,8 @@ import 'package:pantry_pal/app/home_page.dart';
 import 'package:pantry_pal/calendar/calendar_page.dart';
 import 'package:pantry_pal/splash_screen.dart';
 import 'package:pantry_pal/services/app_initializer.dart';
+import 'package:pantry_pal/services/firebase_service.dart';
+import 'package:pantry_pal/auth/auth_wrapper.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 class MyApp extends StatefulWidget {
@@ -19,6 +21,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   bool _settingsLoaded = false;
+  bool _firebaseLoaded = false;
   bool _allServicesLoaded = false;
   Box? _settingsBox;
 
@@ -32,6 +35,14 @@ class _MyAppState extends State<MyApp> {
       setState(() {
         _settingsBox = box;
         _settingsLoaded = true;
+      });
+    });
+
+    // Listen for Firebase to be ready
+    AppInitializer.onFirebaseReady.listen((_) {
+      print('Firebase ready notification received in MyApp');
+      setState(() {
+        _firebaseLoaded = true;
       });
     });
 
@@ -72,9 +83,9 @@ class _MyAppState extends State<MyApp> {
             debugShowCheckedModeBanner: false,
             title: 'PantryPal',
             theme: themeController.getTheme(),
-            home: _allServicesLoaded
-                ? MyHomePage()
-                : SplashScreen(showProgress: true),
+            home: DeepLinkHandler(
+              child: AuthWrapper(isInitialized: _firebaseLoaded && _settingsLoaded),
+            ),
             routes: {
               '/calendar': (context) => CalendarPage(),
             },
