@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:pantry_pal/theme_controller.dart';
 import 'package:pantry_pal/services/firebase_service.dart';
 import 'package:pantry_pal/auth/login_page.dart';
+import 'package:pantry_pal/services/firebase_sync_service.dart';
+import 'package:pantry_pal/widgets/sync_status_widget.dart';
 
 class SettingsPage extends StatelessWidget {
   @override
@@ -61,6 +63,67 @@ class SettingsPage extends StatelessWidget {
 
           SizedBox(height: 16),
 
+          // Add Sync Section
+          Card(
+            elevation: 2,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Data Sync',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: themeController.currentFont,
+                      color: textColor,
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                  // Sync status indicator
+                  SyncStatusWidget(),
+                  SizedBox(height: 8),
+                  // Manual sync button
+                  if (firebaseService.isLoggedIn)
+                    ElevatedButton.icon(
+                      onPressed: () async {
+                        try {
+                          // First sync local data to Firestore
+                          await firebaseSyncService.syncToFirestore();
+
+                          // Then sync from Firestore to get any data from other devices
+                          await firebaseSyncService.syncFromFirestore();
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Sync completed successfully')),
+                          );
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Error syncing: $e')),
+                          );
+                        }
+                      },
+                      icon: Icon(Icons.sync),
+                      label: Text('Sync Now'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blueAccent,
+                        foregroundColor: Colors.white,
+                      ),
+                    ),
+                  if (!firebaseService.isLoggedIn)
+                    Text(
+                      'Sign in to enable data sync',
+                      style: TextStyle(
+                        fontFamily: themeController.currentFont,
+                        color: isDarkMode ? Colors.grey.shade400 : Colors.grey.shade600,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
           // Font Selection Section
           Card(
             elevation: 2,

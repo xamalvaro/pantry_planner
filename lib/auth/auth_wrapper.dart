@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:pantry_pal/services/firebase_service.dart';
 import 'package:pantry_pal/services/user_service.dart';
+import 'package:pantry_pal/services/firebase_sync_service.dart';
 import 'package:pantry_pal/app/home_page.dart';
 import 'package:pantry_pal/auth/login_page.dart';
 import 'package:pantry_pal/splash_screen.dart';
@@ -37,7 +38,10 @@ class AuthWrapper extends StatelessWidget {
         // Explicitly check if user is authenticated
         if (snapshot.hasData && snapshot.data != null) {
           // Fetch current user data
-          userService.getCurrentUser();
+          userService.getCurrentUser().then((_) {
+            // Trigger sync from Firestore
+            firebaseSyncService.syncFromFirestore();
+          });
           return MyHomePage();
         } else {
           // No user logged in, show login page

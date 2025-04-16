@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:pantry_pal/app/app.dart';
 import 'package:pantry_pal/services/app_initializer.dart';
+import 'package:pantry_pal/services/firebase_sync_service.dart';
 
 void main() async {
   // Catch Flutter initialization errors
@@ -21,9 +22,16 @@ void main() async {
   runApp(MyApp(isInitialized: false));
 
   // After app is visible, initialize services
-  WidgetsBinding.instance.addPostFrameCallback((_) {
+  WidgetsBinding.instance.addPostFrameCallback((_) async {
     // Start initialization
-    AppInitializer.initializeApp();
+    await AppInitializer.initializeApp();
+
+    // Initialize Firebase Sync Service
+    try {
+      await firebaseSyncService.initialize();
+    } catch (e) {
+      print('Error initializing Firebase Sync Service: $e');
+    }
 
     // Add a timeout to prevent app from getting stuck
     Future.delayed(Duration(seconds: 5), () {

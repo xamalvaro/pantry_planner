@@ -251,7 +251,7 @@ class FirebaseExpiryService {
       'quantity': item.quantity,
       'quantityUnit': item.quantityUnit,
       'isNotified': item.isNotified,
-      'lastUpdated': FieldValue.serverTimestamp(),
+      'lastSynced': FieldValue.serverTimestamp(),
     };
   }
 

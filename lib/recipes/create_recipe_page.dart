@@ -9,6 +9,8 @@ import 'package:pantry_pal/widgets/recipe/servings_time_section.dart';
 import 'package:pantry_pal/widgets/recipe/tags_section.dart';
 import 'package:pantry_pal/widgets/recipe/ingredients_section.dart';
 import 'package:pantry_pal/widgets/recipe/steps_section.dart';
+import 'package:pantry_pal/services/firebase_service.dart';
+import 'package:pantry_pal/services/firebase_recipe_service.dart';
 
 class CreateRecipePage extends StatefulWidget {
   @override
@@ -154,11 +156,26 @@ class _CreateRecipePageState extends State<CreateRecipePage> {
       // Save to Hive
       await recipeBox.put(title, recipeData);
 
-      // Show success message
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Recipe saved successfully!')),
-        );
+      // Sync to Firestore if the user is logged in
+      if (firebaseService.isLoggedIn) {
+        try {
+          // Create Recipe object
+          final recipe = Recipe(
+            title: title,
+            description: _descriptionController.text.trim(),
+            ingredients: _ingredients,
+            steps: _steps,
+            servings: _servings,
+            prepTimeMinutes: _prepTimeMinutes,
+            cookTimeMinutes: _cookTimeMinutes,
+            tags: _tags,
+          );
+
+          await firebaseRecipeService.saveRecipe(recipe);
+        } catch (e) {
+          print('Error syncing recipe to Firestore: $e');
+          // We still show success because local save worked
+        }
       }
 
       // Return to previous screen

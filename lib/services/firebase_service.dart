@@ -92,18 +92,21 @@ class FirebaseService {
 
   /// Get a collection reference for the current user's grocery lists
   CollectionReference getUserGroceryLists() {
+    final uid = this.uid;
     if (uid == null) throw Exception('User not logged in');
     return firestore.collection('users').doc(uid).collection('groceryLists');
   }
 
   /// Get a collection reference for the current user's recipes
   CollectionReference getUserRecipes() {
+    final uid = this.uid;
     if (uid == null) throw Exception('User not logged in');
     return firestore.collection('users').doc(uid).collection('recipes');
   }
 
   /// Get a collection reference for the current user's pantry items
   CollectionReference getUserPantryItems() {
+    final uid = this.uid;
     if (uid == null) throw Exception('User not logged in');
     return firestore.collection('users').doc(uid).collection('pantryItems');
   }

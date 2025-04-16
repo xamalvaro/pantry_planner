@@ -4,6 +4,8 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:uuid/uuid.dart';
 import 'package:pantry_pal/expiry/expiry_model.dart';
 import 'package:pantry_pal/recipes/recipe_model.dart'; // Import your existing Recipe model
+import 'package:pantry_pal/services/firebase_service.dart';
+import 'package:pantry_pal/services/firebase_expiry_service.dart';
 
 import 'matching/ingredient_matcher.dart';
 
@@ -114,54 +116,68 @@ class ExpiryService {
     _expiryUpdatesController.add(items);
   }
 
-  /// Add a new pantry item
+  // Modify the existing addItem method in ExpiryService
   Future<void> addItem(PantryItem item) async {
     try {
       final box = await Hive.openBox('pantryItems');
       await box.put(item.id, item.toMap());
-      _log("Added pantry item: ${item.name}");
-
-      // Clear cache
-      _invalidateCache();
-
-      // Notify listeners
       _expiryUpdatesController.add(await getAllItems());
+
+      // Sync to Firestore if the user is logged in
+      if (firebaseService.isLoggedIn) {
+        try {
+          await firebaseExpiryService.addItem(item);
+        } catch (e) {
+          print('Error syncing item to Firestore: $e');
+          // Continue even if Firebase sync fails
+        }
+      }
     } catch (e) {
-      _log("Error adding item: $e");
+      print('Error adding item: $e');
+      rethrow;
     }
   }
 
-  /// Update an existing pantry item
+// Similarly modify updateItem and deleteItem methods
   Future<void> updateItem(PantryItem item) async {
     try {
       final box = await Hive.openBox('pantryItems');
       await box.put(item.id, item.toMap());
-      _log("Updated pantry item: ${item.name}");
-
-      // Clear cache
-      _invalidateCache();
-
-      // Notify listeners
       _expiryUpdatesController.add(await getAllItems());
+
+      // Sync to Firestore if the user is logged in
+      if (firebaseService.isLoggedIn) {
+        try {
+          await firebaseExpiryService.updateItem(item);
+        } catch (e) {
+          print('Error syncing item update to Firestore: $e');
+          // Continue even if Firebase sync fails
+        }
+      }
     } catch (e) {
-      _log("Error updating item: $e");
+      print('Error updating item: $e');
+      rethrow;
     }
   }
 
-  /// Delete a pantry item
   Future<void> deleteItem(String itemId) async {
     try {
       final box = await Hive.openBox('pantryItems');
       await box.delete(itemId);
-      _log("Deleted pantry item ID: $itemId");
-
-      // Clear cache
-      _invalidateCache();
-
-      // Notify listeners
       _expiryUpdatesController.add(await getAllItems());
+
+      // Sync to Firestore if the user is logged in
+      if (firebaseService.isLoggedIn) {
+        try {
+          await firebaseExpiryService.deleteItem(itemId);
+        } catch (e) {
+          print('Error syncing item deletion to Firestore: $e');
+          // Continue even if Firebase sync fails
+        }
+      }
     } catch (e) {
-      _log("Error deleting item: $e");
+      print('Error deleting item: $e');
+      rethrow;
     }
   }
 

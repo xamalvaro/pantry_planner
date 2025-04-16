@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:pantry_pal/theme_controller.dart';
 import 'package:pantry_pal/utils/export_utils.dart';
+import 'package:pantry_pal/services/firebase_service.dart';
+import 'package:pantry_pal/services/firebase_grocery_service.dart';
 
 class ViewListPage extends StatefulWidget {
   final String listName;
@@ -131,6 +133,22 @@ class _ViewListPageState extends State<ViewListPage> {
       'categories': categories,
       'tags': tags,
     });
+
+    // Sync to Firestore if the user is logged in
+    if (firebaseService.isLoggedIn) {
+      try {
+        firebaseGroceryService.saveGroceryList(widget.listName, {
+          'categories': categories,
+          'tags': tags,
+        });
+      } catch (e) {
+        print('Error syncing grocery list to Firestore: $e');
+        // Show a snackbar or toast to notify the user
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error saving to cloud: $e')),
+        );
+      }
+    }
   }
 
   @override

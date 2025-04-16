@@ -8,6 +8,7 @@ import 'package:pantry_pal/create_page_selector.dart';
 import 'package:pantry_pal/calendar/calendar_page.dart';
 import 'package:pantry_pal/settings_page.dart';
 import 'package:pantry_pal/expiry/expiry_service.dart';
+import 'package:pantry_pal/widgets/sync_status_widget.dart';
 
 class MyHomePage extends StatefulWidget {
   @override
@@ -83,11 +84,21 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
       appBar: AppBar(
         title: Text('PantryPal'),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        // This physics setting reduces animation overhead
-        physics: const NeverScrollableScrollPhysics(),
-        children: _tabWidgets,
+      body: Column(
+        children: [
+          // Add sync status widget
+          SyncStatusWidget(),
+
+          // Existing TabBarView wrapped in Expanded
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              // This physics setting reduces animation overhead
+              physics: const NeverScrollableScrollPhysics(),
+              children: _tabWidgets,
+            ),
+          ),
+        ],
       ),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
