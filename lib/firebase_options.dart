@@ -50,19 +50,20 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyCz-l6hxbReyCSRvHI7C8EBzAmwpFwx-sg',
-    appId: '1:674189814273:android:fccc9857af827e05b26e00',
-    messagingSenderId: '674189814273',
-    projectId: 'pantrypal-b62e8',
-    storageBucket: 'pantrypal-b62e8.firebasestorage.app',
+    apiKey: 'AIzaSyA0K1JDLEBvcPV6oHbfdho_e0w96lZmpzw',
+    appId: '1:72723963507:android:f322c7674872ea1f5a1406',
+    messagingSenderId: '72723963507',
+    projectId: 'pantrypal-f89db',
+    storageBucket: 'pantrypal-f89db.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyAlZJJpdnH4WK0nFN9A7ZVi04qblTh2QsA',
-    appId: '1:674189814273:ios:0ea2ce0640f61299b26e00',
-    messagingSenderId: '674189814273',
-    projectId: 'pantrypal-b62e8',
-    storageBucket: 'pantrypal-b62e8.firebasestorage.app',
+    apiKey: 'AIzaSyAGNS6ILr6IqpwwcrDyr73U0xIW3pAr_CU',
+    appId: '1:72723963507:ios:de6068b9f2f9e70d5a1406',
+    messagingSenderId: '72723963507',
+    projectId: 'pantrypal-f89db',
+    storageBucket: 'pantrypal-f89db.firebasestorage.app',
     iosBundleId: 'com.example.pantryPal',
   );
+
 }

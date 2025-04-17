@@ -11,7 +11,7 @@ val kotlinVersion = rootProject.extra["kotlinVersion"] as String
 val javaVersion = rootProject.extra["javaVersion"] as JavaVersion
 
 android {
-    namespace = "com.example.pantry_pal"
+    namespace = "com.tbd.pantry_pal"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = "27.0.12077973"
 

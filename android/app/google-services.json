@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "674189814273",
-    "project_id": "pantrypal-b62e8",
-    "storage_bucket": "pantrypal-b62e8.firebasestorage.app"
+    "project_number": "72723963507",
+    "project_id": "pantrypal-f89db",
+    "storage_bucket": "pantrypal-f89db.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:674189814273:android:fccc9857af827e05b26e00",
+        "mobilesdk_app_id": "1:72723963507:android:f322c7674872ea1f5a1406",
         "android_client_info": {
           "package_name": "com.example.pantry_pal"
         }
@@ -15,7 +15,26 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyCz-l6hxbReyCSRvHI7C8EBzAmwpFwx-sg"
+          "current_key": "AIzaSyA0K1JDLEBvcPV6oHbfdho_e0w96lZmpzw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:72723963507:android:1f1bed6a26f515785a1406",
+        "android_client_info": {
+          "package_name": "com.tbd.pantry_pal"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA0K1JDLEBvcPV6oHbfdho_e0w96lZmpzw"
         }
       ],
       "services": {
