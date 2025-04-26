@@ -48,9 +48,15 @@ class ListFormatUtils {
           final listData = box.get(key);
           if (listData == null) return false;
 
-          final tags = listData['tags'] as List<dynamic>? ?? [];
-          final matchesSearch = key.toString().toLowerCase().contains(searchQuery.toLowerCase());
+          // Check if the list name contains the search query
+          final matchesSearch = searchQuery.isEmpty ||
+              key.toString().toLowerCase().contains(searchQuery.toLowerCase());
+
+          // Check if the list has the selected tag
+          final tags = List<String>.from(listData['tags'] ?? []);
           final matchesTag = selectedTag == null || tags.contains(selectedTag);
+
+          // Both conditions must be true
           return matchesSearch && matchesTag;
         } catch (e) {
           print('Error filtering key $key: $e');

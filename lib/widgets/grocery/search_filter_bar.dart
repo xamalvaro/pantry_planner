@@ -1,4 +1,4 @@
-// widgets/grocery/search_filter_bar.dart
+// lib/widgets/grocery/search_filter_bar.dart
 import 'package:flutter/material.dart';
 
 class SearchFilterBar extends StatelessWidget {
@@ -36,6 +36,8 @@ class SearchFilterBar extends StatelessWidget {
                 contentPadding: EdgeInsets.symmetric(vertical: 0),
               ),
               onChanged: onSearchChanged,
+              // Add this to trigger search on submit as well
+              onSubmitted: onSearchChanged,
             ),
           ),
           SizedBox(width: 8),
