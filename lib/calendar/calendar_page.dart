@@ -229,226 +229,229 @@ class _CalendarPageState extends State<CalendarPage> with AutomaticKeepAliveClie
     final themeController = Provider.of<ThemeController>(context);
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
-    return Column(
-      children: [
-        // AppBar-like header
-        Container(
-          padding: EdgeInsets.only(
-            top: MediaQuery.of(context).padding.top,
-            left: 16,
-            right: 16,
-            bottom: 16,
-          ),
-          color: Theme.of(context).appBarTheme.backgroundColor,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Expiry Calendar',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: themeController.currentFont,
-                  color: Theme.of(context).appBarTheme.foregroundColor,
+    return Material(
+      color:Theme.of(context).scaffoldBackgroundColor,
+      child:Column(
+        children: [
+          // AppBar-like header
+          Container(
+            padding: EdgeInsets.only(
+              top: MediaQuery.of(context).padding.top,
+              left: 16,
+              right: 16,
+              bottom: 16,
+            ),
+            color: Theme.of(context).appBarTheme.backgroundColor,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Expiry Calendar',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: themeController.currentFont,
+                    color: Theme.of(context).appBarTheme.foregroundColor,
+                  ),
                 ),
-              ),
-              Row(
-                children: [
-                  // Recipe suggestions button with prominent styling
-                  ElevatedButton.icon(
-                    icon: Icon(
-                      Icons.restaurant_menu,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                    label: Text(
-                      'Suggestions',
-                      style: TextStyle(
+                Row(
+                  children: [
+                    // Recipe suggestions button with prominent styling
+                    ElevatedButton.icon(
+                      icon: Icon(
+                        Icons.restaurant_menu,
                         color: Colors.white,
-                        fontFamily: themeController.currentFont,
-                        fontSize: 12,
+                        size: 20,
                       ),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 0),
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                    ),
-                    onPressed: _isLoadingSuggestions ? null : _showRecipeSuggestions,
-                  ),
-                  SizedBox(width: 8),
-                  // Add item button
-                  IconButton(
-                    icon: Icon(
-                        Icons.add,
-                        color: Theme.of(context).appBarTheme.foregroundColor
-                    ),
-                    onPressed: _addNewItem,
-                    tooltip: 'Add Item',
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-
-        // Main content
-        Expanded(
-          child: Column(
-            children: [
-              // Calendar widget - Use const for optimization
-              TableCalendar(
-                firstDay: DateTime.now().subtract(Duration(days: 365)),
-                lastDay: DateTime.now().add(Duration(days: 365)),
-                focusedDay: _focusedDay,
-                calendarFormat: _calendarFormat,
-                eventLoader: _getEventsForDay,
-                selectedDayPredicate: (day) {
-                  return isSameDay(_selectedDay, day);
-                },
-                onDaySelected: (selectedDay, focusedDay) {
-                  if (!isSameDay(_selectedDay, selectedDay)) {
-                    setState(() {
-                      _selectedDay = selectedDay;
-                      _focusedDay = focusedDay;
-                      _updateSelectedEvents(selectedDay);
-                    });
-                  }
-                },
-                onFormatChanged: (format) {
-                  if (_calendarFormat != format) {
-                    setState(() {
-                      _calendarFormat = format;
-                    });
-                  }
-                },
-                onPageChanged: (focusedDay) {
-                  _focusedDay = focusedDay;
-                },
-                calendarStyle: CalendarStyle(
-                  defaultTextStyle: TextStyle(
-                    fontFamily: themeController.currentFont,
-                    color: isDarkMode ? Colors.white : Colors.black87,
-                  ),
-                  weekendTextStyle: TextStyle(
-                    fontFamily: themeController.currentFont,
-                    color: Colors.red.withOpacity(isDarkMode ? 0.8 : 0.6),
-                  ),
-                  selectedTextStyle: TextStyle(
-                    fontFamily: themeController.currentFont,
-                    color: Colors.white,
-                  ),
-                  todayTextStyle: TextStyle(
-                    fontFamily: themeController.currentFont,
-                    color: Colors.white,
-                  ),
-                  selectedDecoration: BoxDecoration(
-                    color: Colors.blueAccent,
-                    shape: BoxShape.circle,
-                  ),
-                  todayDecoration: BoxDecoration(
-                    color: Colors.blue.shade300,
-                    shape: BoxShape.circle,
-                  ),
-                  markerDecoration: BoxDecoration(
-                    color: Colors.redAccent,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                headerStyle: HeaderStyle(
-                  titleTextStyle: TextStyle(
-                    fontFamily: themeController.currentFont,
-                    fontSize: 17.0,
-                    color: isDarkMode ? Colors.white : Colors.black87,
-                  ),
-                  formatButtonTextStyle: TextStyle(
-                    fontFamily: themeController.currentFont,
-                    fontSize: 14.0,
-                  ),
-                  formatButtonDecoration: BoxDecoration(
-                    color: Colors.blueAccent.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                daysOfWeekStyle: DaysOfWeekStyle(
-                  weekdayStyle: TextStyle(
-                    fontFamily: themeController.currentFont,
-                    color: isDarkMode ? Colors.white70 : Colors.black54,
-                  ),
-                  weekendStyle: TextStyle(
-                    fontFamily: themeController.currentFont,
-                    color: Colors.red.withOpacity(0.6),
-                  ),
-                ),
-              ),
-
-              SizedBox(height: 8),
-
-              // Date header for selected events
-              if (_selectedDay != null)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.event,
-                        color: isDarkMode ? Colors.white70 : Colors.blueGrey,
-                      ),
-                      SizedBox(width: 8),
-                      Text(
-                        'Items expiring on ${DateFormat('MMMM d, yyyy').format(_selectedDay!)}',
+                      label: Text(
+                        'Suggestions',
                         style: TextStyle(
+                          color: Colors.white,
                           fontFamily: themeController.currentFont,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                          fontSize: 12,
                         ),
                       ),
-                    ],
-                  ),
-                ),
-
-              SizedBox(height: 8),
-
-              // Divider between calendar and events list
-              Divider(height: 1),
-
-              // Loading indicator
-              if (_isLoading)
-                Expanded(
-                  child: Center(
-                    child: CircularProgressIndicator(),
-                  ),
-                ),
-
-              // Events list
-              if (!_isLoading)
-                Expanded(
-                  child: _selectedEvents.isEmpty
-                      ? Center(
-                    child: Text(
-                      'No items expiring on this date',
-                      style: TextStyle(
-                        fontFamily: themeController.currentFont,
-                        color: isDarkMode ? Colors.white60 : Colors.black54,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
                       ),
+                      onPressed: _isLoadingSuggestions ? null : _showRecipeSuggestions,
                     ),
-                  )
-                      : ListView.builder(
-                    itemCount: _selectedEvents.length,
-                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    itemBuilder: (context, index) {
-                      final item = _selectedEvents[index];
-                      return _buildExpiryEventCard(item, context);
-                    },
+                    SizedBox(width: 8),
+                    // Add item button
+                    IconButton(
+                      icon: Icon(
+                          Icons.add,
+                          color: Theme.of(context).appBarTheme.foregroundColor
+                      ),
+                      onPressed: _addNewItem,
+                      tooltip: 'Add Item',
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          // Main content
+          Expanded(
+            child: Column(
+              children: [
+                // Calendar widget - Use const for optimization
+                TableCalendar(
+                  firstDay: DateTime.now().subtract(Duration(days: 365)),
+                  lastDay: DateTime.now().add(Duration(days: 365)),
+                  focusedDay: _focusedDay,
+                  calendarFormat: _calendarFormat,
+                  eventLoader: _getEventsForDay,
+                  selectedDayPredicate: (day) {
+                    return isSameDay(_selectedDay, day);
+                  },
+                  onDaySelected: (selectedDay, focusedDay) {
+                    if (!isSameDay(_selectedDay, selectedDay)) {
+                      setState(() {
+                        _selectedDay = selectedDay;
+                        _focusedDay = focusedDay;
+                        _updateSelectedEvents(selectedDay);
+                      });
+                    }
+                  },
+                  onFormatChanged: (format) {
+                    if (_calendarFormat != format) {
+                      setState(() {
+                        _calendarFormat = format;
+                      });
+                    }
+                  },
+                  onPageChanged: (focusedDay) {
+                    _focusedDay = focusedDay;
+                  },
+                  calendarStyle: CalendarStyle(
+                    defaultTextStyle: TextStyle(
+                      fontFamily: themeController.currentFont,
+                      color: isDarkMode ? Colors.white : Colors.black87,
+                    ),
+                    weekendTextStyle: TextStyle(
+                      fontFamily: themeController.currentFont,
+                      color: Colors.red.withOpacity(isDarkMode ? 0.8 : 0.6),
+                    ),
+                    selectedTextStyle: TextStyle(
+                      fontFamily: themeController.currentFont,
+                      color: Colors.white,
+                    ),
+                    todayTextStyle: TextStyle(
+                      fontFamily: themeController.currentFont,
+                      color: Colors.white,
+                    ),
+                    selectedDecoration: BoxDecoration(
+                      color: Colors.blueAccent,
+                      shape: BoxShape.circle,
+                    ),
+                    todayDecoration: BoxDecoration(
+                      color: Colors.blue.shade300,
+                      shape: BoxShape.circle,
+                    ),
+                    markerDecoration: BoxDecoration(
+                      color: Colors.redAccent,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  headerStyle: HeaderStyle(
+                    titleTextStyle: TextStyle(
+                      fontFamily: themeController.currentFont,
+                      fontSize: 17.0,
+                      color: isDarkMode ? Colors.white : Colors.black87,
+                    ),
+                    formatButtonTextStyle: TextStyle(
+                      fontFamily: themeController.currentFont,
+                      fontSize: 14.0,
+                    ),
+                    formatButtonDecoration: BoxDecoration(
+                      color: Colors.blueAccent.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  daysOfWeekStyle: DaysOfWeekStyle(
+                    weekdayStyle: TextStyle(
+                      fontFamily: themeController.currentFont,
+                      color: isDarkMode ? Colors.white70 : Colors.black54,
+                    ),
+                    weekendStyle: TextStyle(
+                      fontFamily: themeController.currentFont,
+                      color: Colors.red.withOpacity(0.6),
+                    ),
                   ),
                 ),
-            ],
+
+                SizedBox(height: 8),
+
+                // Date header for selected events
+                if (_selectedDay != null)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.event,
+                          color: isDarkMode ? Colors.white70 : Colors.blueGrey,
+                        ),
+                        SizedBox(width: 8),
+                        Text(
+                          'Items expiring on ${DateFormat('MMMM d, yyyy').format(_selectedDay!)}',
+                          style: TextStyle(
+                            fontFamily: themeController.currentFont,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                SizedBox(height: 8),
+
+                // Divider between calendar and events list
+                Divider(height: 1),
+
+                // Loading indicator
+                if (_isLoading)
+                  Expanded(
+                    child: Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                  ),
+
+                // Events list
+                if (!_isLoading)
+                  Expanded(
+                    child: _selectedEvents.isEmpty
+                        ? Center(
+                      child: Text(
+                        'No items expiring on this date',
+                        style: TextStyle(
+                          fontFamily: themeController.currentFont,
+                          color: isDarkMode ? Colors.white60 : Colors.black54,
+                        ),
+                      ),
+                    )
+                        : ListView.builder(
+                      itemCount: _selectedEvents.length,
+                      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      itemBuilder: (context, index) {
+                        final item = _selectedEvents[index];
+                        return _buildExpiryEventCard(item, context);
+                      },
+                    ),
+                  ),
+              ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
