@@ -67,6 +67,35 @@ class _LoginPageState extends State<LoginPage> {
       });
     }
   }
+  Future<void> _signInAsGuest() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = '';
+    });
+
+    try {
+      // Call the UserService to sign in as guest (local only)
+      final user = await userService.signInAsGuest();
+
+      if (user != null) {
+        // Navigate to home page, removing all previous routes
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => MyHomePage()),
+              (Route<dynamic> route) => false,
+        );
+      } else {
+        setState(() {
+          _errorMessage = 'Failed to start guest mode. Please try again.';
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Error starting guest mode: ${e.toString()}';
+        _isLoading = false;
+      });
+    }
+  }
 
   // Format Firebase Auth errors into user-friendly messages
   String _formatAuthError(dynamic error) {
@@ -278,6 +307,45 @@ class _LoginPageState extends State<LoginPage> {
                 ),
 
                 SizedBox(height: 32),
+
+                OutlinedButton(
+                  onPressed: _isLoading ? null : _signInAsGuest,
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(color: Colors.grey.shade400),
+                    padding: EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: _isLoading
+                      ? Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.grey,
+                        ),
+                      ),
+                      SizedBox(width: 12),
+                      Text(
+                        'Signing in...',
+                        style: TextStyle(
+                          fontFamily: themeController.currentFont,
+                        ),
+                      ),
+                    ],
+                  )
+                      : Text(
+                    'Continue as Guest',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontFamily: themeController.currentFont,
+                    ),
+                  ),
+                ),
 
                 // Register link
                 Row(

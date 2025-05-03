@@ -240,6 +240,25 @@ class UserService {
       return null;
     }
   }
+  /// Sign in as guest (local only)
+  Future<UserModel?> signInAsGuest() async {
+    try {
+      // Start guest mode in Firebase service
+      await _firebase.startGuestMode();
+
+      // Create a basic guest user model (only stored locally)
+      _currentUser = UserModel(
+        uid: 'guest-${DateTime.now().millisecondsSinceEpoch}',
+        email: 'guest@local',
+        displayName: 'Guest User',
+      );
+
+      return _currentUser;
+    } catch (e) {
+      print('UserService: Error signing in as guest: $e');
+      return null;
+    }
+  }
 }
 
 // Global instance

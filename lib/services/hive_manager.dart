@@ -100,6 +100,27 @@ class HiveManager {
       print('HiveManager: Error closing all boxes: $e');
     }
   }
+  // Add to a utility class
+  Future<void> clearLocalData() async {
+    try {
+      // Delete grocery lists
+      final groceryBox = await Hive.openBox('groceryLists');
+      await groceryBox.clear();
+
+      // Delete recipes
+      final recipesBox = await Hive.openBox('recipes');
+      await recipesBox.clear();
+
+      // Delete pantry items
+      final pantryBox = await Hive.openBox('pantryItems');
+      await pantryBox.clear();
+
+      print('Local data cleared successfully');
+    } catch (e) {
+      print('Error clearing local data: $e');
+      throw e;
+    }
+  }
 }
 
 // Global instance for easy access

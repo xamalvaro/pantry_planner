@@ -121,6 +121,30 @@ class FirebaseService {
     print('Explicit Auth Check - User: $currentUser');
     return currentUser != null;
   }
+  /// Flag to track if app is in guest mode
+  bool _isGuestMode = false;
+
+  /// Start guest mode (no Firebase auth)
+  Future<bool> startGuestMode() async {
+    try {
+      _isGuestMode = true;
+      print('FirebaseService: Started guest mode');
+      return true;
+    } catch (e) {
+      print('FirebaseService: Error starting guest mode: $e');
+      _isGuestMode = false;
+      return false;
+    }
+  }
+
+  /// Check if app is in guest mode
+  bool get isGuestMode => _isGuestMode;
+
+  /// End guest mode
+  Future<void> endGuestMode() async {
+    _isGuestMode = false;
+    print('FirebaseService: Ended guest mode');
+  }
 }
 
 // Global instance for easy access
