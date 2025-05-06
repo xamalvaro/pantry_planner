@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.tbd.pantry_pal">
+    package="com.tbd.pantry_planner">
     <application
-        android:label="pantry_pal"
+        android:label="pantry_planner"
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon">
         <activity

@@ -12,7 +12,12 @@
           "package_name": "com.example.pantry_pal"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "72723963507-bn24uc2o5fhir9ruo9nt039pqo656v01.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyA0K1JDLEBvcPV6oHbfdho_e0w96lZmpzw"
@@ -20,7 +25,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "72723963507-bn24uc2o5fhir9ruo9nt039pqo656v01.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "72723963507-5v0i0mo7bgcji1o9suok0lapf1aeecvj.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.pantryPal"
+              }
+            }
+          ]
         }
       }
     },
@@ -31,7 +48,20 @@
           "package_name": "com.tbd.pantry_pal"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "72723963507-76pr2nie5f893aeqrn9ltfg075bpbjd8.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.tbd.pantry_pal",
+            "certificate_hash": "0ab1693b50fc11af9d1cd148b77f4263e879fb02"
+          }
+        },
+        {
+          "client_id": "72723963507-bn24uc2o5fhir9ruo9nt039pqo656v01.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyA0K1JDLEBvcPV6oHbfdho_e0w96lZmpzw"
@@ -39,7 +69,55 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "72723963507-bn24uc2o5fhir9ruo9nt039pqo656v01.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "72723963507-5v0i0mo7bgcji1o9suok0lapf1aeecvj.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.pantryPal"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:72723963507:android:66357b6965982f2c5a1406",
+        "android_client_info": {
+          "package_name": "com.tbd.pantry_planner"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "72723963507-bn24uc2o5fhir9ruo9nt039pqo656v01.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA0K1JDLEBvcPV6oHbfdho_e0w96lZmpzw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "72723963507-bn24uc2o5fhir9ruo9nt039pqo656v01.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "72723963507-5v0i0mo7bgcji1o9suok0lapf1aeecvj.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.pantryPal"
+              }
+            }
+          ]
         }
       }
     }

@@ -11,7 +11,7 @@ val kotlinVersion = rootProject.extra["kotlinVersion"] as String
 val javaVersion = rootProject.extra["javaVersion"] as JavaVersion
 
 android {
-    namespace = "com.tbd.pantry_pal"
+    namespace = "com.tbd.pantry_planner"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = "27.0.12077973"
 
@@ -32,11 +32,11 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.tbd.pantry_pal"
+        applicationId = "com.tbd.pantry_planner"
         minSdk = 23
         targetSdk = flutter.targetSdkVersion
-        versionCode = flutter.versionCode
-        versionName = flutter.versionName
+        versionCode = 2
+        versionName = "Production"
         multiDexEnabled = true
     }
 
