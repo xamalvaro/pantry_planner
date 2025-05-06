@@ -82,7 +82,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('PantryPal'),
+        title: Text('PantryPlanner'),
       ),
       body: Column(
         children: [

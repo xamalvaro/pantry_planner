@@ -126,7 +126,7 @@ class _LoginPageState extends State<LoginPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Sign In to PantryPal'),
+        title: Text('Sign In to PantryPlanner'),
       ),
       body: Center(
         child: SingleChildScrollView(
@@ -147,7 +147,7 @@ class _LoginPageState extends State<LoginPage> {
 
                 // App name
                 Text(
-                  'PantryPal',
+                  'PantryPlanner',
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,

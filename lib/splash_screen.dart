@@ -39,7 +39,7 @@ class SplashScreen extends StatelessWidget {
 
               // App name
               Text(
-                'PantryPal',
+                'PantryPlanner',
                 style: TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
@@ -133,7 +133,7 @@ class DarkSplashScreen extends StatelessWidget {
 
               // App name
               Text(
-                'PantryPal',
+                'PantryPlanner',
                 style: TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,

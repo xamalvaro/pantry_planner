@@ -128,7 +128,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
                 // App name
                 Text(
-                  'Join PantryPal',
+                  'Join PantryPlanner',
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,

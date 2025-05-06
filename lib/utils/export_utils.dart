@@ -28,7 +28,7 @@ class ExportUtils {
       buffer.writeln();
     }
 
-    buffer.writeln('Created with PantryPal app');
+    buffer.writeln('Created with PantryPlanner app');
 
     try {
       // Share the text
