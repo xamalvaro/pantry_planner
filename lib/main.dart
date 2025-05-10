@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:pantry_pal/app/app.dart';
 import 'package:pantry_pal/services/app_initializer.dart';
 import 'package:pantry_pal/services/firebase_sync_service.dart';
+import 'package:pantry_pal/services/notification_service.dart';
 
 void main() async {
   // Catch Flutter initialization errors
@@ -17,6 +18,9 @@ void main() async {
 
   // Ensure Flutter binding is initialized
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize notifications
+  await NotificationService().initialize();
 
   // First, run the app with initialization flag
   runApp(MyApp(isInitialized: false));

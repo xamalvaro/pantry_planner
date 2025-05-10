@@ -8,6 +8,7 @@ import 'package:pantry_pal/service_locator.dart';
 import 'package:pantry_pal/recipes/recipe_to_list.dart';
 import 'package:pantry_pal/recipes/recipe_model.dart';
 import 'package:pantry_pal/widgets/recipe/recipe_display.dart';
+import 'package:pantry_pal/recipes/edit_recipe_page.dart';
 
 class ViewRecipePage extends StatefulWidget {
   final String recipeTitle;
@@ -120,6 +121,25 @@ class _ViewRecipePageState extends State<ViewRecipePage> {
         );
       },
     );
+  }
+
+  void _editRecipe() async {
+    if (_recipe == null) return;
+
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditRecipePage(recipe: _recipe!),
+      ),
+    );
+
+    if (result != null && result is String) {
+      // If title changed, update the recipe title
+      setState(() {
+        // Reload the recipe with the new title
+        _loadRecipe();
+      });
+    }
   }
 
   Future<void> _shareRecipe() async {
@@ -239,6 +259,12 @@ class _ViewRecipePageState extends State<ViewRecipePage> {
       appBar: AppBar(
         title: Text(_recipe!.title),
         actions: [
+        // Edit button
+          IconButton(
+          icon: Icon(Icons.edit),
+          onPressed: _isDeleting || _isSharing ? null : _editRecipe,
+          tooltip: 'Edit Recipe',
+          ),
           // Share button
           IconButton(
             icon: _isSharing
