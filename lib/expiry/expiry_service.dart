@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:uuid/uuid.dart';
 import 'package:pantry_pal/expiry/expiry_model.dart';
-import 'package:pantry_pal/recipes/recipe_model.dart'; // Import your existing Recipe model
+import 'package:pantry_pal/recipes/recipe_model.dart';
 import 'package:pantry_pal/services/firebase_service.dart';
 import 'package:pantry_pal/services/firebase_expiry_service.dart';
 import 'package:pantry_pal/expiry/item_details_page.dart';
@@ -47,11 +47,11 @@ class ExpiryService {
 
   /// Get all pantry items
   Future<List<PantryItem>> getAllItems() async {
-    // Return cached items if fresh (last 30 seconds)
+    // Reduced cache time to 5 seconds for better responsiveness
     final now = DateTime.now();
     if (_pantryItemsCache != null &&
         _lastCacheTime != null &&
-        now.difference(_lastCacheTime!).inSeconds < 30) {
+        now.difference(_lastCacheTime!).inSeconds < 5) {
       return List.from(_pantryItemsCache!);
     }
 
@@ -118,11 +118,16 @@ class ExpiryService {
     _expiryUpdatesController.add(items);
   }
 
-  // Modify the existing addItem method in ExpiryService
+  /// Add a new item with cache invalidation
   Future<void> addItem(PantryItem item) async {
     try {
       final box = await Hive.openBox('pantryItems');
       await box.put(item.id, item.toMap());
+
+      // Invalidate cache after adding item
+      _invalidateCache();
+
+      // Update stream with fresh data
       _expiryUpdatesController.add(await getAllItems());
 
       // Sync to Firestore if the user is logged in
@@ -131,7 +136,6 @@ class ExpiryService {
           await firebaseExpiryService.addItem(item);
         } catch (e) {
           print('Error syncing item to Firestore: $e');
-          // Continue even if Firebase sync fails
         }
       }
     } catch (e) {
@@ -140,11 +144,16 @@ class ExpiryService {
     }
   }
 
-// Similarly modify updateItem and deleteItem methods
+  /// Update an item with cache invalidation
   Future<void> updateItem(PantryItem item) async {
     try {
       final box = await Hive.openBox('pantryItems');
       await box.put(item.id, item.toMap());
+
+      // Invalidate cache after updating item
+      _invalidateCache();
+
+      // Update stream with fresh data
       _expiryUpdatesController.add(await getAllItems());
 
       // Sync to Firestore if the user is logged in
@@ -153,7 +162,6 @@ class ExpiryService {
           await firebaseExpiryService.updateItem(item);
         } catch (e) {
           print('Error syncing item update to Firestore: $e');
-          // Continue even if Firebase sync fails
         }
       }
     } catch (e) {
@@ -162,10 +170,16 @@ class ExpiryService {
     }
   }
 
+  /// Delete an item with cache invalidation
   Future<void> deleteItem(String itemId) async {
     try {
       final box = await Hive.openBox('pantryItems');
       await box.delete(itemId);
+
+      // Invalidate cache after deleting item
+      _invalidateCache();
+
+      // Update stream with fresh data
       _expiryUpdatesController.add(await getAllItems());
 
       // Sync to Firestore if the user is logged in
@@ -174,7 +188,6 @@ class ExpiryService {
           await firebaseExpiryService.deleteItem(itemId);
         } catch (e) {
           print('Error syncing item deletion to Firestore: $e');
-          // Continue even if Firebase sync fails
         }
       }
     } catch (e) {
@@ -250,8 +263,9 @@ class ExpiryService {
   Future<List<RecipeSuggestion>> forceRefreshSuggestions() async {
     _log("Force refreshing recipe suggestions");
 
-    // Clear recipe cache to ensure fresh data
+    // Clear both caches to ensure fresh data
     _recipesCache = null;
+    _invalidateCache();
 
     // Get expiring items
     final expiringItems = await getExpiringItems(withinDays: 14);
@@ -579,7 +593,7 @@ class ExpiryService {
     }
   }
 
-// Add this helper method inside the ExpiryService class
+  // Helper method to get category icons
   IconData _getCategoryIcon(String category) {
     switch (category.toLowerCase()) {
       case 'dairy':

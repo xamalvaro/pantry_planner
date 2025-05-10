@@ -163,9 +163,8 @@ class _CalendarPageState extends State<CalendarPage> with AutomaticKeepAliveClie
       ),
     );
 
-    if (result == true) {
-      _loadEvents();
-    }
+    // Always reload events when returning from add page
+    _loadEvents();
   }
 
   // View item details
@@ -411,7 +410,7 @@ class _CalendarPageState extends State<CalendarPage> with AutomaticKeepAliveClie
     );
   }
 
-  // Build the calendar view (rest of the existing code)
+  // Build the calendar view
   Widget _buildCalendarView() {
     final themeController = Provider.of<ThemeController>(context);
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
@@ -566,7 +565,7 @@ class _CalendarPageState extends State<CalendarPage> with AutomaticKeepAliveClie
     );
   }
 
-  // Build a card for an expiring item (rest of the existing code)
+  // Build a card for an expiring item
   Widget _buildExpiryEventCard(PantryItem item, BuildContext context) {
     final themeController = Provider.of<ThemeController>(context);
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
