@@ -72,8 +72,34 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
     );
 
     if (confirmed == true) {
-      await _expiryService.deleteItem(_item.id);
-      Navigator.pop(context, true); // Return to calendar with reload flag
+      try {
+        await _expiryService.deleteItem(_item.id);
+
+        // Show a success message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Item deleted successfully'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+
+        // Pop with a result to indicate successful deletion
+        if (mounted) {
+          Navigator.pop(context, true);
+        }
+      } catch (e) {
+        print('Error deleting item: $e');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error deleting item: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
     }
   }
 

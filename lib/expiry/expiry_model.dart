@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uuid/uuid.dart';
 
 // Model for pantry items with expiration dates
 class PantryItem {
@@ -76,8 +77,15 @@ class PantryItem {
 
   // Create PantryItem from Map (from Hive)
   factory PantryItem.fromMap(Map<dynamic, dynamic> map) {
+    // Generate ID if not present or empty
+    String id = map['id']?.toString() ?? '';
+    if (id.isEmpty) {
+      // Generate a new ID if the stored one is empty
+      id = Uuid().v4();
+    }
+
     return PantryItem(
-      id: map['id']?.toString() ?? '',
+      id: id,
       name: map['name']?.toString() ?? '',
       expiryDate: DateTime.fromMillisecondsSinceEpoch(map['expiryDate'] is int ? map['expiryDate'] : 0),
       category: map['category']?.toString() ?? '',

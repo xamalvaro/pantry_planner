@@ -67,7 +67,19 @@ class ExpiryService {
         final data = box.get(key);
         if (data != null) {
           try {
-            items.add(PantryItem.fromMap(data));
+            // Create the item
+            var item = PantryItem.fromMap(data);
+
+            // If the item's ID doesn't match the key, use the key as the ID
+            if (item.id != key.toString()) {
+              item = item.copyWith(id: key.toString());
+
+              // Update the stored data with the correct ID
+              final updatedData = item.toMap();
+              await box.put(key, updatedData);
+            }
+
+            items.add(item);
           } catch (e) {
             _log("Error loading pantry item: $e");
           }
@@ -76,7 +88,7 @@ class ExpiryService {
 
       // Update cache
       _pantryItemsCache = items;
-      _lastCacheTime = now;
+      _lastCacheTime = DateTime.now();
 
       _log("Retrieved ${items.length} pantry items");
       return List.from(items);
@@ -121,6 +133,11 @@ class ExpiryService {
   /// Add a new item with cache invalidation
   Future<void> addItem(PantryItem item) async {
     try {
+      // Ensure the item has a valid ID
+      if (item.id.isEmpty) {
+        throw Exception('Item ID cannot be empty');
+      }
+
       final box = await Hive.openBox('pantryItems');
       await box.put(item.id, item.toMap());
 
@@ -173,19 +190,35 @@ class ExpiryService {
   /// Delete an item with cache invalidation
   Future<void> deleteItem(String itemId) async {
     try {
-      final box = await Hive.openBox('pantryItems');
-      await box.delete(itemId);
+      print('Deleting item with ID: $itemId');
 
-      // Invalidate cache after deleting item
-      _invalidateCache();
+      final box = await Hive.openBox('pantryItems');
+
+      // Check if the item exists before deleting
+      if (box.containsKey(itemId)) {
+        await box.delete(itemId);
+        print('Item deleted from Hive');
+      } else {
+        print('Item not found in Hive with ID: $itemId');
+      }
+
+      // Force clear cache immediately
+      _pantryItemsCache = null;
+      _lastCacheTime = null;
+
+      // Get fresh data (this will reload from storage)
+      final updatedItems = await getAllItems();
 
       // Update stream with fresh data
-      _expiryUpdatesController.add(await getAllItems());
+      _expiryUpdatesController.add(updatedItems);
+
+      print('Updated items count after deletion: ${updatedItems.length}');
 
       // Sync to Firestore if the user is logged in
       if (firebaseService.isLoggedIn) {
         try {
           await firebaseExpiryService.deleteItem(itemId);
+          print('Item deleted from Firestore');
         } catch (e) {
           print('Error syncing item deletion to Firestore: $e');
         }
@@ -355,233 +388,13 @@ class ExpiryService {
               label: 'View',
               textColor: Colors.white,
               onPressed: () {
-                // Show a more stylish dialog
-                showDialog(
-                  context: context,
-                  builder: (BuildContext dialogContext) {
-                    final itemsToShow = expiredItems.isNotEmpty ? expiredItems : criticalItems;
-                    final isExpired = expiredItems.isNotEmpty;
-                    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-
-                    return Dialog(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      elevation: 0,
-                      backgroundColor: Colors.transparent,
-                      child: Container(
-                        padding: EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: isDarkMode ? Colors.grey[900] : Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.3),
-                              blurRadius: 10,
-                              offset: Offset(0, 5),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            // Header with icon
-                            Row(
-                              children: [
-                                Container(
-                                  padding: EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    color: isExpired
-                                        ? Colors.red.withOpacity(0.1)
-                                        : Colors.orange.withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: Icon(
-                                    isExpired ? Icons.error_outline : Icons.access_time,
-                                    color: isExpired ? Colors.red : Colors.orange,
-                                    size: 30,
-                                  ),
-                                ),
-                                SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        isExpired ? 'Expired Items' : 'Expiring Soon',
-                                        style: TextStyle(
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      Text(
-                                        '${itemsToShow.length} item${itemsToShow.length > 1 ? "s" : ""} need attention',
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-
-                            SizedBox(height: 20),
-
-                            // Items list with better styling
-                            ConstrainedBox(
-                              constraints: BoxConstraints(maxHeight: 300),
-                              child: ListView.separated(
-                                shrinkWrap: true,
-                                itemCount: itemsToShow.length,
-                                separatorBuilder: (context, index) => SizedBox(height: 8),
-                                itemBuilder: (context, index) {
-                                  final item = itemsToShow[index];
-                                  return Container(
-                                    decoration: BoxDecoration(
-                                      color: isDarkMode
-                                          ? Colors.grey[800]
-                                          : Colors.grey[100],
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(
-                                        color: item.statusColor.withOpacity(0.3),
-                                        width: 1,
-                                      ),
-                                    ),
-                                    child: Material(
-                                      color: Colors.transparent,
-                                      child: InkWell(
-                                        borderRadius: BorderRadius.circular(12),
-                                        onTap: () {
-                                          Navigator.pop(dialogContext);
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) => ItemDetailsPage(item: item),
-                                            ),
-                                          );
-                                        },
-                                        child: Padding(
-                                          padding: EdgeInsets.all(12),
-                                          child: Row(
-                                            children: [
-                                              // Item icon/category
-                                              Container(
-                                                padding: EdgeInsets.all(10),
-                                                decoration: BoxDecoration(
-                                                  color: item.statusColor.withOpacity(0.1),
-                                                  borderRadius: BorderRadius.circular(8),
-                                                ),
-                                                child: Icon(
-                                                  _getCategoryIcon(item.category),
-                                                  color: item.statusColor,
-                                                  size: 24,
-                                                ),
-                                              ),
-                                              SizedBox(width: 12),
-
-                                              // Item details
-                                              Expanded(
-                                                child: Column(
-                                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                                  children: [
-                                                    Text(
-                                                      item.name,
-                                                      style: TextStyle(
-                                                        fontWeight: FontWeight.bold,
-                                                        fontSize: 16,
-                                                      ),
-                                                    ),
-                                                    SizedBox(height: 4),
-                                                    Text(
-                                                      '${item.category} • ${item.location}',
-                                                      style: TextStyle(
-                                                        fontSize: 13,
-                                                        color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                                                      ),
-                                                    ),
-                                                    SizedBox(height: 2),
-                                                    Text(
-                                                      'Expires: ${DateFormat('MMM d, yyyy').format(item.expiryDate)}',
-                                                      style: TextStyle(
-                                                        fontSize: 13,
-                                                        color: item.statusColor,
-                                                        fontWeight: FontWeight.w500,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-
-                                              // Days badge
-                                              Container(
-                                                padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                                decoration: BoxDecoration(
-                                                  color: item.statusColor.withOpacity(0.1),
-                                                  borderRadius: BorderRadius.circular(20),
-                                                  border: Border.all(
-                                                    color: item.statusColor.withOpacity(0.3),
-                                                    width: 1,
-                                                  ),
-                                                ),
-                                                child: Column(
-                                                  children: [
-                                                    Text(
-                                                      item.daysRemaining >= 0
-                                                          ? '${item.daysRemaining}'
-                                                          : '${-item.daysRemaining}',
-                                                      style: TextStyle(
-                                                        color: item.statusColor,
-                                                        fontWeight: FontWeight.bold,
-                                                        fontSize: 16,
-                                                      ),
-                                                    ),
-                                                    Text(
-                                                      item.daysRemaining >= 0 ? 'days' : 'ago',
-                                                      style: TextStyle(
-                                                        color: item.statusColor,
-                                                        fontSize: 11,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-
-                            SizedBox(height: 20),
-
-                            // Action buttons with better styling
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(dialogContext),
-                                  style: TextButton.styleFrom(
-                                    foregroundColor: isDarkMode ? Colors.grey[400] : Colors.grey[700],
-                                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                                  ),
-                                  child: Text(
-                                    'Close',
-                                    style: TextStyle(fontSize: 16),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                );
+                // Use a post-frame callback to ensure the context is valid
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  // Check if the context is still mounted before showing dialog
+                  if (context.mounted) {
+                    _showExpiryDialog(context, criticalItems, expiredItems);
+                  }
+                });
               },
             ),
             duration: Duration(seconds: 5),
@@ -591,6 +404,239 @@ class ExpiryService {
     } catch (e) {
       _log("Error showing expiry info: $e");
     }
+  }
+
+// Add this as a separate method
+  void _showExpiryDialog(BuildContext context, List<PantryItem> criticalItems, List<PantryItem> expiredItems) {
+    if (!context.mounted) return;
+
+    final itemsToShow = expiredItems.isNotEmpty ? expiredItems : criticalItems;
+    final isExpired = expiredItems.isNotEmpty;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+          child: Container(
+            padding: EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: isDarkMode ? Colors.grey[900] : Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.3),
+                  blurRadius: 10,
+                  offset: Offset(0, 5),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header with icon
+                Row(
+                  children: [
+                    Container(
+                      padding: EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: isExpired
+                            ? Colors.red.withOpacity(0.1)
+                            : Colors.orange.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(
+                        isExpired ? Icons.error_outline : Icons.access_time,
+                        color: isExpired ? Colors.red : Colors.orange,
+                        size: 30,
+                      ),
+                    ),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            isExpired ? 'Expired Items' : 'Expiring Soon',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            '${itemsToShow.length} item${itemsToShow.length > 1 ? "s" : ""} need attention',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+
+                SizedBox(height: 20),
+
+                // Items list with better styling
+                ConstrainedBox(
+                  constraints: BoxConstraints(maxHeight: 300),
+                  child: ListView.separated(
+                    shrinkWrap: true,
+                    itemCount: itemsToShow.length,
+                    separatorBuilder: (context, index) => SizedBox(height: 8),
+                    itemBuilder: (context, index) {
+                      final item = itemsToShow[index];
+                      return Container(
+                        decoration: BoxDecoration(
+                          color: isDarkMode
+                              ? Colors.grey[800]
+                              : Colors.grey[100],
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: item.statusColor.withOpacity(0.3),
+                            width: 1,
+                          ),
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(12),
+                            onTap: () {
+                              Navigator.pop(dialogContext);
+                              // Use navigator from the root context
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ItemDetailsPage(item: item),
+                                ),
+                              );
+                            },
+                            child: Padding(
+                              padding: EdgeInsets.all(12),
+                              child: Row(
+                                children: [
+                                  // Item icon/category
+                                  Container(
+                                    padding: EdgeInsets.all(10),
+                                    decoration: BoxDecoration(
+                                      color: item.statusColor.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Icon(
+                                      _getCategoryIcon(item.category),
+                                      color: item.statusColor,
+                                      size: 24,
+                                    ),
+                                  ),
+                                  SizedBox(width: 12),
+
+                                  // Item details
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          item.name,
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                        SizedBox(height: 4),
+                                        Text(
+                                          '${item.category} • ${item.location}',
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                                          ),
+                                        ),
+                                        SizedBox(height: 2),
+                                        Text(
+                                          'Expires: ${DateFormat('MMM d, yyyy').format(item.expiryDate)}',
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            color: item.statusColor,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+
+                                  // Days badge
+                                  Container(
+                                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: item.statusColor.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(20),
+                                      border: Border.all(
+                                        color: item.statusColor.withOpacity(0.3),
+                                        width: 1,
+                                      ),
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        Text(
+                                          item.daysRemaining >= 0
+                                              ? '${item.daysRemaining}'
+                                              : '${-item.daysRemaining}',
+                                          style: TextStyle(
+                                            color: item.statusColor,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                        Text(
+                                          item.daysRemaining >= 0 ? 'days' : 'ago',
+                                          style: TextStyle(
+                                            color: item.statusColor,
+                                            fontSize: 11,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+
+                SizedBox(height: 20),
+
+                // Action buttons with better styling
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(dialogContext),
+                      style: TextButton.styleFrom(
+                        foregroundColor: isDarkMode ? Colors.grey[400] : Colors.grey[700],
+                        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      ),
+                      child: Text(
+                        'Close',
+                        style: TextStyle(fontSize: 16),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   // Helper method to get category icons

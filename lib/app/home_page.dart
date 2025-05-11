@@ -1,4 +1,4 @@
-// app/home_page.dart
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:pantry_pal/theme_controller.dart';
@@ -24,6 +24,9 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
   // List of lazy-loaded tab widgets
   final List<Widget> _tabWidgets = [];
 
+  // Track if we've shown the expiry notification
+  static bool _hasShownExpiryNotification = false;
+
   @override
   void initState() {
     super.initState();
@@ -41,14 +44,17 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     // Initialize lazy loaded tab widgets
     _initializeTabWidgets();
 
-    // Show expiry info with delay after tabs are created
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      try {
-        ExpiryService().showExpiryInfo(context);
-      } catch (e) {
-        print('Error showing expiry info: $e');
-      }
-    });
+    // Only show expiry info once when the app is first opened
+    if (!_hasShownExpiryNotification) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        try {
+          ExpiryService().showExpiryInfo(context);
+          _hasShownExpiryNotification = true;
+        } catch (e) {
+          print('Error showing expiry info: $e');
+        }
+      });
+    }
   }
 
   // Initialize tab widgets once

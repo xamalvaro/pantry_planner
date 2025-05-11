@@ -73,7 +73,7 @@ class _AddItemPageState extends State<AddItemPage> {
 
     try {
       if (isEditMode) {
-        // Update existing item
+        // Update existing item - ensure we keep the original ID
         final updatedItem = widget.initialItem!.copyWith(
           name: _nameController.text.trim(),
           expiryDate: _expiryDate,
@@ -82,14 +82,19 @@ class _AddItemPageState extends State<AddItemPage> {
           notes: _notesController.text.trim(),
           quantity: quantity,
           quantityUnit: _quantityUnit,
-          isNotified: false, // Reset notification status when updated
+          isNotified: false,
         );
 
         await _expiryService.updateItem(updatedItem);
       } else {
-        // Create new item
+        // Create new item with a proper ID
+        final newId = _expiryService.generateItemId();
+        if (newId.isEmpty) {
+          throw Exception('Failed to generate item ID');
+        }
+
         final newItem = PantryItem(
-          id: _expiryService.generateItemId(),
+          id: newId,
           name: _nameController.text.trim(),
           expiryDate: _expiryDate,
           category: _category,

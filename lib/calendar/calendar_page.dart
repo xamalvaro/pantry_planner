@@ -41,6 +41,14 @@ class _CalendarPageState extends State<CalendarPage> with AutomaticKeepAliveClie
   @override
   void initState() {
     super.initState();
+
+    // Listen to expiry updates
+    _expiryService.expiryUpdates.listen((items) {
+      if (mounted) {
+        _loadEvents();
+      }
+    });
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadEvents();
     });

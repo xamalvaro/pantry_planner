@@ -43,6 +43,13 @@ class _CalendarViewState extends State<CalendarView> {
   @override
   void didUpdateWidget(CalendarView oldWidget) {
     super.didUpdateWidget(oldWidget);
+    // Check if events have changed
+    if (widget.expiryEvents != oldWidget.expiryEvents) {
+      print('Calendar events updated');
+      if (_selectedDay != null) {
+        _updateSelectedEvents(_selectedDay!);
+      }
+    }
     if (widget.selectedDay != oldWidget.selectedDay) {
       _selectedDay = widget.selectedDay;
       if (_selectedDay != null) {
