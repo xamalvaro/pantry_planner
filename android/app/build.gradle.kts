@@ -35,7 +35,7 @@ android {
         applicationId = "com.tbd.pantry_planner"
         minSdk = 23
         targetSdk = flutter.targetSdkVersion
-        versionCode = 2
+        versionCode = 3
         versionName = "Production"
         multiDexEnabled = true
     }

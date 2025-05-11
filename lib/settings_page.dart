@@ -6,6 +6,7 @@ import 'package:pantry_pal/auth/login_page.dart';
 import 'package:pantry_pal/services/firebase_sync_service.dart';
 import 'package:pantry_pal/widgets/sync_status_widget.dart';
 import 'package:pantry_pal/auth/register_page.dart';
+import 'package:pantry_pal/services/account_deletion_service.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 class SettingsPage extends StatelessWidget {
@@ -238,7 +239,7 @@ class SettingsPage extends StatelessWidget {
                     icon: Icon(Icons.delete_forever),
                     label: Text('Delete All My Data'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red.shade400,
+                      backgroundColor: Colors.orange.shade600,
                       foregroundColor: Colors.white,
                       minimumSize: Size(double.infinity, 50),
                     ),
@@ -326,6 +327,27 @@ class SettingsPage extends StatelessWidget {
                   if (firebaseService.isGuestMode)
                     SizedBox(height: 12),
 
+                  // Delete account button (for logged-in users)
+                  if (!firebaseService.isGuestMode && firebaseService.isLoggedIn)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12.0),
+                      child: ElevatedButton.icon(
+                        onPressed: () => _showAccountDeletionConfirmation(context),
+                        icon: Icon(Icons.delete_forever),
+                        label: Text(
+                          'Delete My Account',
+                          style: TextStyle(
+                            fontSize: 16,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red.shade600,
+                          foregroundColor: Colors.white,
+                          minimumSize: Size(double.infinity, 50),
+                        ),
+                      ),
+                    ),
+
                   // Logout button (or "Exit Guest Mode" for guests)
                   ElevatedButton(
                     onPressed: () => _showLogoutConfirmation(context),
@@ -410,9 +432,225 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
+  // Account deletion confirmation dialog
+  void _showAccountDeletionConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              Icon(Icons.warning, color: Colors.red),
+              SizedBox(width: 8),
+              Text('Delete Account'),
+            ],
+          ),
+          content: Text(
+            'WARNING: This will permanently delete your account, all your data in the cloud, and all local data. This action cannot be undone. Are you absolutely sure you want to continue?',
+            style: TextStyle(fontSize: 16),
+          ),
+          actions: [
+            TextButton(
+              child: Text('Cancel'),
+              onPressed: () => Navigator.of(dialogContext).pop(),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red.shade600,
+              ),
+              child: Text('Delete My Account'),
+              onPressed: () async {
+                Navigator.of(dialogContext).pop();
+
+                // Check if reauthentication is needed
+                final needsReauth = await accountDeletionService.needsReauthentication();
+
+                if (needsReauth) {
+                  // Show reauthentication dialog
+                  _showReauthenticationDialog(context);
+                } else {
+                  // Proceed directly with deletion
+                  _performAccountDeletion(context);
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Reauthentication dialog for account deletion
+  void _showReauthenticationDialog(BuildContext context) {
+    final emailController = TextEditingController();
+    final passwordController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: Text('Confirm Your Identity'),
+          content: SingleChildScrollView(
+            child: Form(
+              key: formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'For security, please enter your email and password to continue with account deletion.',
+                    style: TextStyle(fontSize: 14),
+                  ),
+                  SizedBox(height: 16),
+                  TextFormField(
+                    controller: emailController,
+                    decoration: InputDecoration(
+                      labelText: 'Email',
+                      border: OutlineInputBorder(),
+                    ),
+                    keyboardType: TextInputType.emailAddress,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your email';
+                      }
+                      return null;
+                    },
+                  ),
+                  SizedBox(height: 16),
+                  TextFormField(
+                    controller: passwordController,
+                    decoration: InputDecoration(
+                      labelText: 'Password',
+                      border: OutlineInputBorder(),
+                    ),
+                    obscureText: true,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your password';
+                      }
+                      return null;
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              child: Text('Cancel'),
+              onPressed: () => Navigator.of(dialogContext).pop(),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red.shade600,
+              ),
+              child: Text('Continue'),
+              onPressed: () async {
+                if (formKey.currentState!.validate()) {
+                  Navigator.of(dialogContext).pop();
+
+                  try {
+                    // Reauthenticate
+                    await accountDeletionService.reauthenticate(
+                      emailController.text,
+                      passwordController.text,
+                    );
+
+                    // Proceed with deletion
+                    _performAccountDeletion(context);
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Authentication failed. Please try again.'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Perform account deletion with loading dialog
+  void _performAccountDeletion(BuildContext context) async {
+    // Show loading dialog
+    BuildContext? loadingDialogContext;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext dialogContext) {
+        loadingDialogContext = dialogContext;
+        return WillPopScope(
+          onWillPop: () async => false,
+          child: AlertDialog(
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(height: 16),
+                Text(
+                  'Deleting account and all data...\nThis may take a moment.',
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+
+    try {
+      // Delete account and all data
+      await accountDeletionService.deleteAccountAndAllData();
+
+      // Close loading dialog
+      if (loadingDialogContext != null && Navigator.canPop(loadingDialogContext!)) {
+        Navigator.of(loadingDialogContext!).pop();
+      }
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Account and all data deleted successfully'),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      // Navigate to login page
+      await Future.delayed(Duration(milliseconds: 500));
+
+      if (context.mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => LoginPage()),
+              (Route<dynamic> route) => false,
+        );
+      }
+    } catch (e) {
+      // Close loading dialog
+      if (loadingDialogContext != null && Navigator.canPop(loadingDialogContext!)) {
+        Navigator.of(loadingDialogContext!).pop();
+      }
+
+      // Show error message
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error deleting account: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   // Data deletion confirmation dialog
-  // Update the data deletion confirmation method
-  // Improved data deletion confirmation method
   void _showDataDeletionConfirmation(BuildContext context) {
     final isGuest = firebaseService.isGuestMode;
     final confirmationMessage = isGuest
@@ -421,7 +659,7 @@ class SettingsPage extends StatelessWidget {
 
     showDialog(
       context: context,
-      builder: (BuildContext dialogContext) {  // Use a separate context for the dialog
+      builder: (BuildContext dialogContext) {
         return AlertDialog(
           title: Text('Delete All Data'),
           content: Text(confirmationMessage),
@@ -438,10 +676,7 @@ class SettingsPage extends StatelessWidget {
               ),
               child: Text('Delete All Data'),
               onPressed: () {
-                // First pop the confirmation dialog
                 Navigator.of(dialogContext).pop();
-
-                // Then perform the data deletion in a separate function
                 _performDataDeletion(context, isGuest);
               },
             ),
@@ -451,9 +686,8 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-// Separate function to handle the data deletion process
+  // Separate function to handle the data deletion process
   Future<void> _performDataDeletion(BuildContext context, bool isGuest) async {
-    // Show loading dialog
     BuildContext? loadingDialogContext;
 
     showDialog(
@@ -486,7 +720,7 @@ class SettingsPage extends StatelessWidget {
         await _deleteCloudData();
       }
 
-      // Close loading dialog safely
+      // Close loading dialog
       if (loadingDialogContext != null && Navigator.canPop(loadingDialogContext!)) {
         Navigator.of(loadingDialogContext!).pop();
       }
@@ -504,8 +738,6 @@ class SettingsPage extends StatelessWidget {
       // If in guest mode, navigate back to login page
       if (isGuest) {
         await firebaseService.endGuestMode();
-
-        // Use a short delay to ensure all UI operations complete
         await Future.delayed(Duration(milliseconds: 500));
 
         if (context.mounted) {
@@ -518,7 +750,7 @@ class SettingsPage extends StatelessWidget {
     } catch (e) {
       print('Error during data deletion: $e');
 
-      // Close loading dialog safely
+      // Close loading dialog
       if (loadingDialogContext != null && Navigator.canPop(loadingDialogContext!)) {
         Navigator.of(loadingDialogContext!).pop();
       }
@@ -535,7 +767,7 @@ class SettingsPage extends StatelessWidget {
     }
   }
 
-// Helper method to delete local data
+  // Helper method to delete local data
   Future<void> _deleteLocalData() async {
     try {
       // Delete grocery lists
@@ -557,7 +789,7 @@ class SettingsPage extends StatelessWidget {
     }
   }
 
-// Add a method to delete cloud data
+  // Add a method to delete cloud data
   Future<void> _deleteCloudData() async {
     try {
       if (!firebaseService.isLoggedIn) {
