@@ -29,12 +29,18 @@ class ServiceLocator {
     // Create the service
     late final dynamic service;
 
-    switch (serviceName) {
-      case 'expiryService':
-        service = ExpiryService();
-        break;
-      default:
-        throw Exception('Unknown service: $serviceName');
+    try {
+      switch (serviceName) {
+        case 'expiryService':
+          service = ExpiryService();
+          break;
+        default:
+          print("WARNING: Unknown service requested: $serviceName");
+          throw Exception('Unknown service: $serviceName');
+      }
+    } catch (e) {
+      print("ERROR creating service $serviceName: $e");
+      rethrow; // Still throw to maintain existing behavior
     }
 
     // Cache it

@@ -35,7 +35,7 @@ android {
         applicationId = "com.tbd.pantry_planner"
         minSdk = 23
         targetSdk = flutter.targetSdkVersion
-        versionCode = 1
+        versionCode = 6
         versionName = "Testing"
         multiDexEnabled = true
     }
@@ -59,6 +59,7 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:33.12.0"))
 
     // Add Firebase products
+    implementation("com.google.firebase:firebase-crashlytics")
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")

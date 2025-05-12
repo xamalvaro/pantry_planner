@@ -3,7 +3,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:pantry_pal/firebase_options.dart'; // You'll need to generate this
+import 'package:pantry_pal/firebase_options.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 
 /// A service class to manage Firebase initialization and provide access to Firebase services
 class FirebaseService {
@@ -42,23 +43,55 @@ class FirebaseService {
   // Check if user is logged in
   bool get isLoggedIn => currentUser != null;
 
+  // Add this logging function
+  void _logFirebase(String message) {
+    print("FIREBASE: $message");
+    try {
+      FirebaseCrashlytics.instance.log("FIREBASE: $message");
+    } catch (e) {
+      // Ignore if Crashlytics isn't initialized
+    }
+  }
+
   /// Initialize Firebase
   Future<bool> initializeFirebase() async {
-    if (_isInitialized) return true;
+    if (_isInitialized) {
+      _logFirebase("Firebase already initialized, returning");
+      return true;
+    }
 
     try {
+      _logFirebase("Starting Firebase initialization");
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
       );
+      _logFirebase("Firebase.initializeApp() completed");
 
+      _logFirebase("Setting up Firebase Auth");
       _auth = FirebaseAuth.instance;
+      _logFirebase("Setting up Firestore");
       _firestore = FirebaseFirestore.instance;
 
       _isInitialized = true;
-      print('FirebaseService: Firebase initialized successfully');
+      _logFirebase("Firebase initialized successfully");
       return true;
-    } catch (e) {
-      print('FirebaseService: Error initializing Firebase: $e');
+    } catch (e, stack) {
+      _logFirebase("Error initializing Firebase: $e");
+      _logFirebase("Stack trace: ${stack.toString()}");
+
+      try {
+        FirebaseCrashlytics.instance.recordError(e, stack, reason: 'Firebase initialization failed');
+      } catch (_) {}
+
+      // Try to continue with partial initialization
+      try {
+        _logFirebase("Attempting to initialize Firebase Auth only");
+        _auth = FirebaseAuth.instance;
+        _logFirebase("Firebase Auth initialized");
+      } catch (e2) {
+        _logFirebase("Failed to initialize Firebase Auth: $e2");
+      }
+
       return false;
     }
   }
