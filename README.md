@@ -4,5 +4,6 @@ This creates gocery lists for users
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+https://play.google.com/store/apps/details?id=com.tbd.pantry_planner
+
 
